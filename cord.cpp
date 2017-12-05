@@ -57,28 +57,32 @@ void mouse_button_click(int button, int state, int x, int y )
 	if(button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN)exit(0);
 }
 
-/*void sum_imps( )
+void sum_imps( )
 {
 	for(int i = 0; i<=1660; i++)
 	{
 		dots[i]=0;									// Clear dots
 	}
-	
-	
-}*/
+	for (vector<Imp>::iterator it = vector_imp.begin(); it != vector_imp.end(); it++) 
+	{
+		for(int i = left_dot; i <= right_dot; i++)
+		{
+			if(abs(i - (it -> x)) <= PI/2)
+			{
+				dots[i] +=100*(cos( i - (it -> x)))*(it -> speed > 0 == it -> to_right ? 1 : -1);
+			}
+		}
+	}
+}
 
-void draw_imp(Imp imp)     						// TODO DRAW TOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOootooooooo
+void draw_wave()     						// TODO DRAW TOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOootooooooo
 {
-	float y;
-	float x=-(PI/2)*20;
-//	glTranslatef(imp.x, 200, 0);
-	do
-	{	
-		x=x+1;
-		y = cos(x/20.0)*20;	
-		glVertex2f(imp.x + x, y * (imp.speed > 0 == imp.to_right ? 1 : -1));						
-	}while(y>0);
-//	glTranslated(-imp.x, -200, 0);
+	
+	
+	for(int i = left_dot; i <= right_dot; i++)
+	{
+		glVertex2f(i, dots[i]); 
+	}
 }
 /////////////////////////////////////////////////// paint
 void reshape(int w, int h)
@@ -100,10 +104,7 @@ void display()
         glColor3f(0, 1, 1);    // colorising 
         glVertex2f(left_dot, 0); // left dot													
         // Drawing
-        for (vector<Imp>::iterator it = vector_imp.begin(); it != vector_imp.end(); it++) 
-		{
-            draw_imp(*it);    
-        }
+        draw_wave();    
         glVertex2f(right_dot, 0); // right dot							
     glEnd(); 
 	
@@ -133,6 +134,9 @@ void timf(int value)
     }        
     void* v = (void*) &vector_imp[0];
        qsort(v, vector_imp.size(), sizeof(Imp), compare); 											// sort 
+       
+    sum_imps();
+    
 	glutTimerFunc(1, timf, 0);
 }
 
