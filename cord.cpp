@@ -10,16 +10,26 @@ using namespace std;
 ///////////////////////////////////////////////////// MAGIC!!!
 
 int left_dot = 50, right_dot = 600;
+
 struct Imp
 {
-public:
+	int heights[1660];
+	/*const */int height = 100;
 
-	float x;
-	float speed;
+	float x, speed;
+	int width;
 	bool to_right;
 
-		Imp(int x, bool to_right)
+		Imp(int x, bool to_right, int width)
 		{
+		    this->width = width;
+
+		    for (int i = 0; i <= width; i++)
+            {
+                float delta = i / (float)width * PI - PI / 2;
+                heights[i] = height * cos(delta);
+		    }
+
 			this->x = x;
 			speed = 0.3;
 			this->to_right = to_right;
@@ -46,12 +56,12 @@ void mouse_button_click(int button, int state, int x, int y )
 {
 	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-		Imp temp(x, true);
+		Imp temp(x, true, 40);
 		vector_imp.push_back(temp);
 	};
 	if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
 	{
-		Imp temp(x, false);
+		Imp temp(x, false, 40);
 		vector_imp.push_back(temp);
 	};
 	if(button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN)exit(0);
@@ -65,13 +75,13 @@ void sum_imps( )
 	}
 	for (vector<Imp>::iterator it = vector_imp.begin(); it != vector_imp.end(); it++)
 	{
-		for(int i = left_dot; i <= right_dot; i++)
-		{
-			if(abs(i - (it -> x)) <= PI*10)
-			{
-				dots[i] +=100*(cos((i - (it -> x)) / 20)*(it -> speed > 0 == it -> to_right ? 1 : -1));
-			}
-		}
+	    for (int i = 0; i < it -> width; i++)
+        {
+            int dot = (int) (it->x + 0.5 + i - it->width / 2);
+            if (dot < 0) return;
+
+            dots[dot] = (it->heights)[i] * ((it -> speed) > 0 == it -> to_right ? 1 : -1);
+        }
 	}
 }
 
