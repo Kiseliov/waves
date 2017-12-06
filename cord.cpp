@@ -80,7 +80,7 @@ void sum_imps( )
             int dot = (int) (it->x + 0.5 + i - it->width / 2);
             if (dot < 0) return;
 
-            dots[dot] = (it->heights)[i] * ((it -> speed) > 0 == it -> to_right ? 1 : -1);
+            dots[dot] += (it->heights)[i] * ((it -> speed) > 0 == it -> to_right ? 1 : -1);
         }
 	}
 }
