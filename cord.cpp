@@ -9,19 +9,30 @@ using namespace std;
 
 ///////////////////////////////////////////////////// MAGIC!!!
 
-int left_dot = 50, right_dot = 600;
+int left_dot = 200, right_dot = 1400;
+bool pause = false, key0 = false;
 struct Imp
 {
-public:
+	int heights[1660];
+	/*const */int height = 100;
 
-	float x;
-	float speed;
+	float x, speed;
+	float frequency;
 	bool to_right;
+	int width;
 
-		Imp(int x, bool to_right)
+		Imp(int x, bool to_right, float frequency)
 		{
+		    this -> frequency = frequency;
+		    speed = 0.3;
+			this -> width = speed / frequency;
+		    for (int i = 0; i <= width; i++)
+            {
+                float delta = i / (float)width * PI - PI / 2;
+                heights[i] = height * cos(delta);
+		    }
+
 			this->x = x;
-			speed = 0.3;
 			this->to_right = to_right;
 
 			if (!to_right)
@@ -30,6 +41,7 @@ public:
 };
 
 vector<Imp>vector_imp;							// vector of perturbations
+vector<Imp>vector_standing;						// temp vector while generating standing wave
 int dots[1660];									// vector of dots
 
 int compare(const void* a, const void* b)
@@ -40,21 +52,34 @@ int compare(const void* a, const void* b)
 void keyb(unsigned char key, int x, int y)
 {
 	if (key == 27) exit(0);
+	if (key == 13) vector_imp.clear();
+	if (key == 32) pause = !pause;
+	cout << key;
+	if (key0 && key != '0') vector_standing.clear();
+	if (key0 = (key == '0'))
+	{
+		if( vector_standing.empty() ||
+		(vector_standing.end() - 1)  -> x - left_dot >= (vector_standing.end() - 1)-> width)
+		{
+			Imp temp(x, true, 0.005);
+			vector_standing.push_back(temp);
+			vector_imp.push_back(temp);
+		}
+	}	
 };
 
 void mouse_button_click(int button, int state, int x, int y )
 {
 	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-		Imp temp(x, true);
+		Imp temp(x, true, 0.00075);
 		vector_imp.push_back(temp);
 	};
 	if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
 	{
-		Imp temp(x, false);
+		Imp temp(x, false, 0.0075);
 		vector_imp.push_back(temp);
 	};
-	if(button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN)exit(0);
 }
 
 void sum_imps( )
@@ -65,13 +90,13 @@ void sum_imps( )
 	}
 	for (vector<Imp>::iterator it = vector_imp.begin(); it != vector_imp.end(); it++)
 	{
-		for(int i = left_dot; i <= right_dot; i++)
-		{
-			if(abs(i - (it -> x)) <= PI*10)
-			{
-				dots[i] +=100*(cos((i - (it -> x)) / 20)*(it -> speed > 0 == it -> to_right ? 1 : -1));
-			}
-		}
+	    for (int i = 0; i < it -> width; i++)
+        {
+            int dot = (int) (it->x + 0.5 + i - it->width / 2);
+            if (dot < 0) return;
+
+            dots[dot] += (it->heights)[i] * ((it -> speed) > 0 == it -> to_right ? 1 : -1);
+        }
 	}
 }
 
@@ -114,29 +139,27 @@ void display()
 void timf(int value)
 {
 	glutPostRedisplay();
-	   // Move imps
-   for (vector<Imp>::iterator it = vector_imp.begin(); it != vector_imp.end(); it++)
+	if(!pause)
 	{
-		float ix = it -> x;
-		float is = it -> speed;
-
-	    if ((is > 0 && ix + is < right_dot)
-			|| (is < 0 && ix + is > left_dot))
+	   for (vector<Imp>::iterator it = vector_imp.begin(); it != vector_imp.end(); it++)		 // Move imps
 		{
-	    	ix += is;
-	    } else
-		{
-	        is *= -1;
+			float ix = it -> x;
+			float is = it -> speed;
+	    	if ((is > 0 && ix + is < right_dot)
+				|| (is < 0 && ix + is > left_dot))
+			{
+	    		ix += is;
+	    	} else
+			{
+	        	is *= -1;
+    		}
+    		it -> speed = is;
+    		it -> x = ix;
     	}
-
-    	it -> speed = is;
-    	it -> x = ix;
-    }
-    void* v = (void*) &vector_imp[0];
-       qsort(v, vector_imp.size(), sizeof(Imp), compare); 											// sort
-
-    sum_imps();
-
+    	void* v = (void*) &vector_imp[0];
+    	qsort(v, vector_imp.size(), sizeof(Imp), compare); 											// sort
+	}
+	sum_imps();
 	glutTimerFunc(1, timf, 0);
 }
 
@@ -147,7 +170,7 @@ int main(int argc, char* argv[])
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 
-	glutInitWindowSize(800,800);
+	glutInitWindowSize(1500,750);
 	glutCreateWindow("D&B");
 
 	glutReshapeFunc(reshape);
