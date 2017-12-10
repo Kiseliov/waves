@@ -7,21 +7,20 @@
 // git test
 using namespace std;
 
-///////////////////////////////////////////////////// MAGIC!!!
-
-int left_dot = 200, right_dot = 1400;
+///////////////////////////////////////////////////// CONSTATS
+int dx1 = 0, dx2 = 0;								// two constants for marker, pls dont touch them I know they looking ugly, but it works
+int left_dot = 200, right_dot = 1400, height_of_cord = 400;
 bool pause = false, key0 = false;
 struct Imp
 {
 	int heights[1660];
-	/*const */int height = 100;
-
+	int height;
 	float x, speed;
 	float frequency;
 	bool to_right;
 	int width;
 
-		Imp(int x, bool to_right, float frequency)
+		Imp(int x, bool to_right, float frequency, int height)
 		{
 		    this -> frequency = frequency;
 		    speed = 0.3;
@@ -31,9 +30,9 @@ struct Imp
                 float delta = i / (float)width * PI - PI / 2;
                 heights[i] = height * cos(delta);
 		    }
-
-			this->x = x;
-			this->to_right = to_right;
+			this -> height = height;
+			this -> x = x;
+			this -> to_right = to_right;
 
 			if (!to_right)
 				speed *= -1;
@@ -48,7 +47,7 @@ int compare(const void* a, const void* b)
 {
     return int(0.5 + ((Imp*)a) -> x) - int(0.5 + ((Imp*)b) -> x);
 }
-//////////////////////////////////////////////////// enter
+//////////////////////////////////////////////////// keyboard
 void keyb(unsigned char key, int x, int y)
 {
 	if (key == 27) exit(0);
@@ -61,32 +60,56 @@ void keyb(unsigned char key, int x, int y)
 		if( vector_standing.empty() ||
 		(vector_standing.end() - 1)  -> x - left_dot >= (vector_standing.end() - 1)-> width)
 		{
-			Imp temp(x, true, 0.005);
+			Imp temp(x, true, 0.005, 100);
 			vector_standing.push_back(temp);
 			vector_imp.push_back(temp);
 		}
 	}	
 };
 
-void mouse_button_click(int button, int state, int x, int y )
+void mouse_button_click(int button, int state, int x, int y )    /////// mouse clicks| generating waves
 {
-	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)	// left button
 	{
-		Imp temp(x, true, 0.00075);
-		vector_imp.push_back(temp);
+		if(y > height_of_cord) 
+		{
+			Imp temp(x, true, 0.00075, -100);
+			vector_imp.push_back(temp);
+		}
+		if(y <= height_of_cord) 
+		{
+			Imp temp(x, true, 0.00075, 100);
+			vector_imp.push_back(temp);
+		}
 	};
-	if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+	
+		if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) // right button
 	{
-		Imp temp(x, false, 0.0075);
-		vector_imp.push_back(temp);
+		if(y > height_of_cord) 
+		{
+			Imp temp(x, false, 0.00075, -100);
+			vector_imp.push_back(temp);
+		}
+		if(y <= height_of_cord) 
+		{
+			Imp temp(x, false, 0.00075, 100);
+			vector_imp.push_back(temp);
+		}
 	};
 }
 
-void sum_imps( )
+void mouseMove(int x, int y) 									//////// MOUSE MOVING
+{ 	
+	dx1 = x - (0.3/0.00075)/2;
+	dx2 = x + (0.3/0.00075)/2;
+		
+}
+//////////////////////////////////////////////////////////////////////// MAGIC starts here
+void sum_imps( )										//////////////// summaraising imps
 {
 	for(int i = 0; i<=1660; i++)
 	{
-		dots[i]=0;									// Clear dots
+		dots[i]=0;									// Clear dots							///////////////////////// ERROR ABOUT ENDINGS HERE !!!!! I MUST FIX IT!!! FIIIIIIIIIIIIIIIIIIIIIIIIX
 	}
 	for (vector<Imp>::iterator it = vector_imp.begin(); it != vector_imp.end(); it++)
 	{
@@ -98,9 +121,9 @@ void sum_imps( )
             dots[dot] += (it->heights)[i] * ((it -> speed) > 0 == it -> to_right ? 1 : -1);
         }
 	}
-}
+}																								///////// I SAID FIX!!! DONT IGNORE THIS PROBLEM!!!!! 
 
-void draw_wave()     						// TODO DRAW TOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOootooooooo
+void draw_wave()     							/// drawing wave					
 {
 
 
@@ -109,7 +132,7 @@ void draw_wave()     						// TODO DRAW TOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOD
 		glVertex2f(i, dots[i]);
 	}
 }
-/////////////////////////////////////////////////// paint
+///////////////////////////////////////////////////  just reshape
 void reshape(int w, int h)
 {
 	glViewport(0, 0, w, h);
@@ -120,15 +143,21 @@ void reshape(int w, int h)
 	glLoadIdentity();
 }
 
-void display()
+void display()							///////////////// display 
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glLoadIdentity();
-	glTranslatef(0, 200, 0);
-	glBegin(GL_LINE_STRIP);
+	glTranslatef(0, height_of_cord, 0);
+	glBegin(GL_LINES);
+		glColor3f(1,0,0);
+		glVertex2f(dx1, 50);
+		glVertex2f(dx1, -50);
+		glVertex2f(dx2, 50);
+		glVertex2f(dx2, -50);
+	glEnd();
+	glBegin(GL_LINE_STRIP);					// Drawing wave
         glColor3f(0, 1, 1);    // colorising
         glVertex2f(left_dot, 0); // left dot
-        // Drawing
         draw_wave();
         glVertex2f(right_dot, 0); // right dot
     glEnd();
@@ -136,7 +165,7 @@ void display()
 	glutSwapBuffers();
 }
 
-void timf(int value)
+void timf(int value)					/////////// timf + a piece of MAGIC about moving imps for next step
 {
 	glutPostRedisplay();
 	if(!pause)
@@ -180,6 +209,7 @@ int main(int argc, char* argv[])
 	glutTimerFunc(1, timf, 0);
 	glutKeyboardFunc(keyb);
 	glutMouseFunc(mouse_button_click);
+	glutPassiveMotionFunc(mouseMove);
 
 	vector_imp.clear();
 
