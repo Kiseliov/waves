@@ -9,11 +9,12 @@
 using namespace std;
 
 ///////////////////////////////////////////////////// CONSTATS
+int window_size_x = 1500, window_size_y = 750;
 int dx1 = 0, dx2 = 0, dx3 = 0, dx4 = 0, dy = 0;								// constants for marker, pls dont touch them I know they looking ugly, but it works
 int left_dot = 200, right_dot = 1400, height_of_cord = 350;
 bool pause = false, key0 = false;
-float frquency = 0;
-float Bspeed = 0;
+float B_frequency = 0.00075;
+float B_speed = 0.3;
 struct Imp
 {
 	int heights[1660];
@@ -23,10 +24,10 @@ struct Imp
 	bool to_right;
 	int width;
 
-		Imp(int x, bool to_right, float frequency, int height)
+		Imp(int x, bool to_right, float frequency, int height, float speed)
 		{
 		    this -> frequency = frequency;
-		    speed = 0.3;
+		    this -> speed = speed;
 			this -> width = speed / frequency;
 		    for (int i = 0; i <= width; i++)
             {
@@ -38,7 +39,7 @@ struct Imp
 			this -> to_right = to_right;
 
 			if (!to_right)
-				speed *= -1;
+				this -> speed *= -1;
 		}
 };
 
@@ -58,7 +59,7 @@ void keyb(unsigned char key, int x, int y)
 	if (key == 32) pause = !pause;
 	cout << key;
 	if (key0 && key != '0') vector_standing.clear();
-	if (key0 = (key == '0'))
+/*	if (key0 = (key == '0'))
 	{
 		if( vector_standing.empty() ||
 		(vector_standing.end() - 1)  -> x - left_dot >= (vector_standing.end() - 1)-> width)
@@ -67,46 +68,30 @@ void keyb(unsigned char key, int x, int y)
 			vector_standing.push_back(temp);
 			vector_imp.push_back(temp);
 		}
-	}	
+	}*/	
 };
 
 void mouse_button_click(int button, int state, int x, int y )    /////// mouse clicks| generating waves
 {
 	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)	// left button
 	{
-		if(y > height_of_cord) 
-		{
-			Imp temp(x, true, 0.00075, -100);//-y + 750 - height_of_cord);
-			vector_imp.push_back(temp);
-		}
-		if(y <= height_of_cord) 
-		{
-			Imp temp(x, true, 0.00075, 100);//-y + 750 - height_of_cord);
-			vector_imp.push_back(temp);
-		}
+		Imp temp(x, true, B_frequency, window_size_y - height_of_cord - y, B_speed);
+		vector_imp.push_back(temp);
 	};
 	
 		if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) // right button
 	{
-		if(y > height_of_cord) 
-		{
-			Imp temp(x, false, 0.00075, -100);
-			vector_imp.push_back(temp);
-		}
-		if(y <= height_of_cord) 
-		{
-			Imp temp(x, false, 0.00075, 100);
-			vector_imp.push_back(temp);
-		}
+		Imp temp(x, false, B_frequency, window_size_y - height_of_cord - y, B_speed);
+		vector_imp.push_back(temp);
 	};
 }
 
 void mouseMove(int x, int y) 									//////// MOUSE MOVING
 { 	
-	dx1 = x - (0.3/0.00075)/2;
-	dx2 = x + (0.3/0.00075)/2;
-	dx3 = x - 20;
-	dx4 = x + 20;
+	dx1 = x - int((B_speed/B_frequency)/2 + 0.5);
+	dx2 = x + int((B_speed/B_frequency)/2 + 0.5);
+	dx3 = x;
+	dx4 = x;
 	dy = - y;	
 }
 //////////////////////////////////////////////////////////////////////// MAGIC starts here
@@ -134,7 +119,6 @@ void sum_imps( )										//////////////// summaraising imps
             	dots[2*left_dot - dot] -= (it -> heights)[i]* ((it -> speed) > 0 == it -> to_right ? 1 : -1);
         	}
 		
-			//if(i <= right_dot && i >= left_dot)
 			if(i + it -> x - it -> width / 2 + 0.5  < right_dot && i + it -> x - it -> width / 2 + 0.5 > left_dot)
 			{
 				dot = (int) (it->x + 0.5 + i - it->width / 2);
@@ -168,25 +152,47 @@ void display()							///////////////// display
 	glClear(GL_COLOR_BUFFER_BIT);
 	glLoadIdentity();
 	glTranslatef(0, height_of_cord, 0);
+	
+	glBegin(GL_LINES);
+		glColor3f(0,0,1);
+		glVertex3f(0, 0, 0);
+		glVertex3f(window_size_x, 0, 0);
+		
+		glVertex3f(left_dot, -height_of_cord, 0);
+		glVertex3f(left_dot, window_size_y - height_of_cord, 0);
+		
+		for(int i = window_size_y - height_of_cord; i >= - height_of_cord; i = i - 50)
+		{
+			glVertex3f(left_dot - 10, i, 0);
+			glVertex3f(left_dot + 10, i, 0);
+		}
+		
+		for(int i = window_size_x; i >= left_dot; i = i - 50)
+		{
+			glVertex3f(i, 10, 0);
+			glVertex3f(i, -10, 0);
+		}
+	glEnd();
+	
 	glBegin(GL_LINES);					//////////// x marker
-		glColor3f(1,0,0);
-		glVertex2f(dx1, 50);
-		glVertex2f(dx1, -50);
-		glVertex2f(dx2, 50);
-		glVertex2f(dx2, -50);
+		glColor3f(0, 1, 1);
+		glVertex2f(dx1, 8);
+		glVertex2f(dx1, -8);
+		glVertex2f(dx2, 8);
+		glVertex2f(dx2, -8);
 	glEnd();
 	
 	glTranslatef(0, 750 - height_of_cord, 0 );
 	glBegin(GL_LINES);							// y marker
-		glColor3f(1,0,0);
-		glVertex2f(dx3, dy);
+		glColor3f(0 ,1, 1);
+		glVertex2f(left_dot, dy);
 		glVertex2f(dx4, dy);
 	glEnd();
 	
 	glTranslatef(0, -750 + height_of_cord, 0 );
 	
 	glBegin(GL_LINE_STRIP);					// Drawing wave
-        glColor3f(0, 1, 1);    // colorising
+        glColor3f(1, 0, 0);    // colorising
         glVertex2f(left_dot, 0); // left dot
         draw_wave();
         glVertex2f(right_dot, 0); // right dot
@@ -227,7 +233,24 @@ int main(int argc, char* argv[])
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 
-	glutInitWindowSize(1500,750);
+	cout << "Good day, there is simulation of smal sinusoidal waves on the cord." <<'\n';
+	cout <<'\n';
+	cout << "Here is some instruction" << '\n';
+	cout << "If you click left mouse button you will create a sinusoidal impulse, with amplitude equal to distance between cursor and cord, that will go left." << '\n';
+	cout << "If you click right mouse button you will create the same impulse that will go right" << '\n';
+	cout << "If you press enter it will delet all ipulses" << '\n';
+	cout << "If you press space it will pause/unpause the simulation" <<'\n';
+	cout << "If you press esc it will close the simulation" << '\n';
+	cout <<'\n';
+	cout << "Befor we start, pls enter some parameters wich depends on system you want to model. Please consider that the lenght of cord is 1200 conditional unuts and distance between each pair of divisions if 50 conditional points "  << '\n';
+	cout << "1) enter frequensy  of impulses you want to create(my recommend is 0.00075): ";
+	cout << '\n';
+	cin >> B_frequency;
+	cout << "2) enter speed of impulse you want to create(my recommend is 0.3): ";
+	cout << '\n';
+	cin >> B_speed;
+	 
+	glutInitWindowSize(window_size_x,window_size_y);
 	glutCreateWindow("D&B");
 
 	glutReshapeFunc(reshape);
