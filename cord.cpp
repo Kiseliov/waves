@@ -8,7 +8,7 @@
 using namespace std;
 
 ///////////////////////////////////////////////////// CONSTATS
-int dx1 = 0, dx2 = 0;								// two constants for marker, pls dont touch them I know they looking ugly, but it works
+int dx1 = 0, dx2 = 0, dx3 = 0, dx4 = 0, dy = 0;								// two constants for marker, pls dont touch them I know they looking ugly, but it works
 int left_dot = 200, right_dot = 1400, height_of_cord = 400;
 bool pause = false, key0 = false;
 struct Imp
@@ -73,12 +73,12 @@ void mouse_button_click(int button, int state, int x, int y )    /////// mouse c
 	{
 		if(y > height_of_cord) 
 		{
-			Imp temp(x, true, 0.00075, -100);
+			Imp temp(x, true, 0.00075, -y + 750 - height_of_cord);
 			vector_imp.push_back(temp);
 		}
 		if(y <= height_of_cord) 
 		{
-			Imp temp(x, true, 0.00075, 100);
+			Imp temp(x, true, 0.00075, -y + 750 - height_of_cord);
 			vector_imp.push_back(temp);
 		}
 	};
@@ -102,26 +102,41 @@ void mouseMove(int x, int y) 									//////// MOUSE MOVING
 { 	
 	dx1 = x - (0.3/0.00075)/2;
 	dx2 = x + (0.3/0.00075)/2;
-		
+	
+	dx3 = x - 20;
+	dx4 = x + 20;
+	dy = - y;	
 }
 //////////////////////////////////////////////////////////////////////// MAGIC starts here
 void sum_imps( )										//////////////// summaraising imps
 {
 	for(int i = 0; i<=1660; i++)
 	{
-		dots[i]=0;									// Clear dots							///////////////////////// ERROR ABOUT ENDINGS HERE !!!!! I MUST FIX IT!!! FIIIIIIIIIIIIIIIIIIIIIIIIX
+		dots[i]=0;									// Clear dots							
 	}
-	for (vector<Imp>::iterator it = vector_imp.begin(); it != vector_imp.end(); it++)
+	for (vector<Imp>::iterator it = vector_imp.begin(); it != vector_imp.end(); it++)		
 	{
 	    for (int i = 0; i < it -> width; i++)
         {
-            int dot = (int) (it->x + 0.5 + i - it->width / 2);
-            if (dot < 0) return;
+        	int dot = 0; 
+        	if( i > right_dot)
+        	{
+            	dot = (int) (it->x + 0.5 + i - it->width / 2);
+            	if (dot < 0) return;
+            	dots[2*right_dot - dot] -= (it -> heights)[i] * ((it -> speed) );//> 0 == it -> to_right ? 1 : -1);
+        	}//else if (i < left_dot){
+		//	}
+			else
+			{
+				dot = (int) (it->x + 0.5 + i - it->width / 2);
+				if (dot < 0) return;
+            	dots[dot] += (it -> heights)[i] * ((it -> speed) > 0 == it -> to_right ? 1 : -1);
+			};
 
-            dots[dot] += (it->heights)[i] * ((it -> speed) > 0 == it -> to_right ? 1 : -1);
+            //dots[dot] += (it -> heights)[i] * ((it -> speed) > 0 == it -> to_right ? 1 : -1);
         }
 	}
-}																								///////// I SAID FIX!!! DONT IGNORE THIS PROBLEM!!!!! 
+}																								 
 
 void draw_wave()     							/// drawing wave					
 {
@@ -155,6 +170,16 @@ void display()							///////////////// display
 		glVertex2f(dx2, 50);
 		glVertex2f(dx2, -50);
 	glEnd();
+	
+	glTranslatef(0, 750 - height_of_cord, 0 );
+	glBegin(GL_LINES);
+		glColor3f(1,0,0);
+		glVertex2f(dx3, dy);
+		glVertex2f(dx4, dy);
+	glEnd();
+	
+	glTranslatef(0, -750 + height_of_cord, 0 );
+	
 	glBegin(GL_LINE_STRIP);					// Drawing wave
         glColor3f(0, 1, 1);    // colorising
         glVertex2f(left_dot, 0); // left dot
@@ -171,7 +196,7 @@ void timf(int value)					/////////// timf + a piece of MAGIC about moving imps f
 	if(!pause)
 	{
 	   for (vector<Imp>::iterator it = vector_imp.begin(); it != vector_imp.end(); it++)		 // Move imps
-		{
+		{																							///////////////////////// ERROR ABOUT ENDINGS HERE !!!!! I MUST FIX IT!!! FIIIIIIIIIIIIIIIIIIIIIIIIX
 			float ix = it -> x;
 			float is = it -> speed;
 	    	if ((is > 0 && ix + is < right_dot)
@@ -184,7 +209,7 @@ void timf(int value)					/////////// timf + a piece of MAGIC about moving imps f
     		}
     		it -> speed = is;
     		it -> x = ix;
-    	}
+    	}																							///////// I SAID FIX!!! DONT IGNORE THIS PROBLEM!!!!!
     	void* v = (void*) &vector_imp[0];
     	qsort(v, vector_imp.size(), sizeof(Imp), compare); 											// sort
 	}
